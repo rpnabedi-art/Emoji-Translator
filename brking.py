@@ -1,6 +1,6 @@
 import tkinter as tk
 
-# مقدار اولیه
+
 cookies = 0
 cps = 0   # cookies per second
 
@@ -35,7 +35,7 @@ cps_label.pack()
 btn_click = tk.Button(root, text="🍪 Click", command=click_cookie)
 btn_click.pack()
 
-btn_buy = tk.Button(root, text="خرید Cursor (10 🍪)", command=buy_cursor)
+btn_buy = tk.Button(root, text="buy Cursor (10 🍪)", command=buy_cursor)
 btn_buy.pack()
 
 auto_produce()
