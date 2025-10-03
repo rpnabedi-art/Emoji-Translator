@@ -1,0 +1,15 @@
+C:\Documents and Settings\Radan\Мои документы\Visual Studio 2005\Projects\USB_termo_2\USB_termo_2\bin\Debug\USB_termo_2.exe
+C:\Documents and Settings\Radan\Мои документы\Visual Studio 2005\Projects\USB_termo_2\USB_termo_2\bin\Debug\USB_termo_2.pdb
+C:\Documents and Settings\Radan\Мои документы\Visual Studio 2005\Projects\USB_termo_2\USB_termo_2\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\Radan\Мои документы\Visual Studio 2005\Projects\USB_termo_2\USB_termo_2\obj\Debug\USB_termo_2.Properties.Resources.resources
+C:\Documents and Settings\Radan\Мои документы\Visual Studio 2005\Projects\USB_termo_2\USB_termo_2\obj\Debug\USB_termo_2.csproj.GenerateResource.Cache
+C:\Documents and Settings\Radan\Мои документы\Visual Studio 2005\Projects\USB_termo_2\USB_termo_2\obj\Debug\USB_termo_2.exe
+C:\Documents and Settings\Radan\Мои документы\Visual Studio 2005\Projects\USB_termo_2\USB_termo_2\obj\Debug\USB_termo_2.pdb
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\obj\Debug\USB_termo_2.exe
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\obj\Debug\USB_termo_2.pdb
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\obj\Debug\ResolveAssemblyReference.cache
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\obj\Debug\USB_termo_2.Form1.resources
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\obj\Debug\USB_termo_2.Properties.Resources.resources
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\obj\Debug\USB_termo_2.csproj.GenerateResource.Cache
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\bin\Debug\USB_termo_2.exe
+E:\PROJECT\VBNET\USB_TERMO_2datchika\TERMO_PB_2datchik_C#\USB_termo_2\bin\Debug\USB_termo_2.pdb

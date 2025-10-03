@@ -1,0 +1,702 @@
+Comment = Compiled LIB file, no comment included
+
+copyright  = Rick Richard
+www        = http://www.sloservers.com/swusb
+email      = rick@sloservers.com
+comment    = Software USB library (Supports 12MHz, 15MHz)
+libversion = 1.06
+date       = 14 Feb 2012
+statement  = No SOURCE code from the library may be distributed in any form.
+statement  = This library, in both compiled and source forms, is for personal,
+statement  = noncommercial use unless permitted/licensed by the author.
+History    = 1.06 Fix issues related to varying interrupt response times. Added 16MHz support
+History    = 1.05 Fix stuffbit bugs (10 Feb 2012)
+History    = 1.04 Added more efficient CRC routine based on Scott Dattalo's algorithm (16 Jan 2011)
+History    = 1.03 bugfix: NAK DATAx packets when not ready to receive them (25 Sep 2009)
+History    = 1.02 Added support for ACK assumption and fixed 15MHz timing (12 Aug 2009)
+History    = 1.01 Added 15MHz support (8 Aug 2009)
+History    = 1.00 Initial release candidate (29 Jul 2009)
+ '
+ '
+ '
+ '
+ '
+ '
+ '
+[_SWUSB]
+Usb_isr:
+  .def bytecount = R22
+  .def state1 = R16
+  .def state2 = R17
+  .def rxByte = R18
+  .def stuffmask = R19
+  .def count = r20
+  .def pinmask_reg = r16
+  .def acknak = r17
+  .def txByte = r18
+  .def stuffcount = r19
+  .def portout= r21
+  .def pid = r16
+  .def token = r17
+  .def endp  = r18
+  .def status = r19
+  .def devid  = r20
+  .equ PID_OUT = &B11100001
+  .equ PID_IN = &B01101001
+  .equ PID_SOF = &B10100101
+  .equ PID_SETUP = &B00101101
+  .equ PID_DATA0 = &B11000011
+  .equ PID_DATA1 = &B01001011
+  .equ PID_DATA2 = &B10000111
+  .equ PID_MDATA = &B00001111
+  .equ PID_ACK = &B11010010
+  .equ PID_NAK = &B01011010
+  .equ PID_STALL = &B00011110
+  .equ PID_NYET = &B10010110
+  .equ PID_PRE = &B00111100
+  .equ PID_ERR = &B00111100
+  .equ PID_SPLIT = &B01111000
+  .equ PID_PING = &B10110100
+  * .equ pinmask =(2 ^ _usb_dplus) + (2 ^ _usb_dminus)
+  * .equ Jstate = 2 ^ _usb_dminus
+  * .equ Kstate = 2 ^ _usb_dplus
+  .equ stuffed  = &B11111100
+  .equ stuffed0 = &B11111001
+  .equ stuffed1 = &B11110011
+  .equ stuffed2 = &B11100111
+  .equ stuffed3 = &B11001111
+  .equ stuffed4 = &B10011111
+  .equ stuffed5 = &B00111111
+  .equ stuffed6 = &B01111110
+  .equ stuffed7 = &B11111100
+  .equ sync_byte = &b01000000
+.OBJ 93AF
+.OBJ 93BF
+.OBJ 934F
+.OBJ 933F
+  IN stuffmask, SREG
+.OBJ 933F
+Usb_isr_get_j:
+.OBJ 9533
+  * Sbis _usb_pin , _usb_dminus
+  brne usb_isr_get_J
+Usb_isr_get_K:
+  * Sbic _usb_pin , _usb_dplus
+  rjmp usb_isr_gotK
+  * Sbis _usb_pin , _usb_dminus
+  rjmp usb_isr_gotK
+  * Sbic _usb_pin , _usb_dplus
+  rjmp usb_isr_gotK
+  * Sbis _usb_pin , _usb_dminus
+  rjmp usb_isr_gotK
+  * Sbic _usb_pin , _usb_dplus
+  rjmp usb_isr_gotK
+#if _XTAL > 12000000
+  * Sbic _usb_pin , _usb_dplus
+  rjmp usb_isr_gotK
+  * Sbis _usb_pin , _usb_dminus
+  rjmp usb_isr_gotK
+  * Sbic _usb_pin , _usb_dplus
+  rjmp usb_isr_gotK
+#endif
+  rjmp usb_isr_return_pre_push
+Usb_isr_gotk:
+  * ldi XL , lbyte({_usb_rx_buffer})
+  * ldi XH , hbyte({_usb_rx_buffer})
+  * lds status, {_usb_STATUS}
+.OBJ 2744
+  * sbrs status, _usb_RTR
+  * ldi count, _usb_packetsize
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  * sbic _usb_pin, _usb_dminus
+  rjmp usb_isr_get_K
+.OBJ 932F
+.OBJ 931F
+.OBJ FA4
+.OBJ E040
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  * in state2, _usb_pin
+.OBJ 1FB4
+  * sbrs status, _usb_RTR
+.OBJ FA4
+.OBJ E040
+.OBJ 1FB4
+.OBJ 930F
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  * in state1, _usb_pin
+.OBJ E72F
+.OBJ EF3F
+  *bst state2, _usb_dminus
+  *bld rxByte, 0
+.OBJ 2710
+  *bst state2, _usb_dplus
+  *bld rxbyte, 1
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  * In state2 , _usb_pin
+.OBJ 0
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp    usb_isr_gotbit2
+Usb_isr_getbit0:
+  * In state2 , _usb_pin
+.OBJ 2732
+.OBJ 933D
+.OBJ EF3F
+Usb_isr_gotbit0:
+.OBJ 2701
+  * bst state1, _usb_dplus
+.OBJ F920
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+Usb_isr_getbit1:
+  * In state1 , _usb_pin
+* andi state1, pinmask
+  breq Usb_got_SE0
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 7F29
+  breq usb_isr_resample1
+Usb_isr_gotbit1:
+.OBJ 2710
+  * bst state2, _usb_dplus
+.OBJ F921
+Usb_isr_getbit2:
+  * In state2 , _usb_pin
+.OBJ 0
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 7F23
+  breq usb_isr_resample2
+Usb_isr_gotbit2:
+.OBJ 0
+.OBJ 2701
+  * bst state1, _usb_dplus
+.OBJ F922
+Usb_isr_getbit3:
+  * In state1 , _usb_pin
+.OBJ 7E27
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  breq Usb_isr_resample3
+Usb_isr_gotbit3:
+.OBJ 2710
+  * bst state2, _usb_dplus
+.OBJ F923
+.OBJ 7C2F
+  breq usb_isr_unstuff3
+Usb_isr_getbit4:
+  * In state2 , _usb_pin
+.OBJ 2701
+  * bst state1, _usb_dplus
+.OBJ F924
+  RJMP +1
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 792F
+  breq usb_isr_unstuff4
+Usb_isr_getbit5:
+  * In state1 , _usb_pin
+.OBJ 772F
+.OBJ 9543
+.OBJ 2710
+  * bst state2, _usb_dplus
+.OBJ F925
+.OBJ 732F
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  breq usb_isr_unstuff5
+Usb_isr_getbit6:
+  * In state2 , _usb_pin
+.OBJ 2701
+  * bst state1, _usb_dplus
+.OBJ F926
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 3022
+  brlo usb_isr_unstuff6
+  * cpi count, _usb_packetsize+1
+  brSH usb_isr_overflow
+Usb_isr_getbit7:
+  * In state1 , _usb_pin
+.OBJ 2710
+  * bst state2, _usb_dplus
+.OBJ F927
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 3024
+  brlo usb_isr_unstuff7
+  rjmp usb_isr_getbit0
+Usb_got_SE0:
+  rjmp usb_isr_SE0_handler
+Usb_isr_resample1:
+.OBJ 0
+.OBJ 6021
+  * In state1 , _usb_pin
+.OBJ 7F3E
+.OBJ 9510
+#if _XTAL = 15000000
+*  andi state1, pinmask
+  breq Usb_got_SE0
+#endif
+  rjmp usb_isr_gotbit1
+Usb_isr_resample2:
+.OBJ 6022
+.OBJ 7F3D
+.OBJ 9500
+  * In state2 , _usb_pin
+.OBJ 0
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp usb_isr_gotbit2
+Usb_isr_resample3:
+.OBJ 6024
+.OBJ 7F3B
+.OBJ 9510
+.OBJ 0
+  * In state1 , _usb_pin
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp usb_isr_gotbit3
+Usb_isr_unstuff3:
+.OBJ 6028
+.OBJ 7F37
+.OBJ 9500
+  RJMP +1
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp usb_isr_getbit4
+Usb_isr_unstuff4:
+.OBJ 6120
+.OBJ 7E3F
+.OBJ 9510
+  RJMP +1
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp usb_isr_getbit5
+Usb_isr_unstuff5:
+.OBJ 6220
+.OBJ 7D3F
+.OBJ 9500
+  RJMP +1
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp usb_isr_getbit6
+Usb_isr_unstuff6:
+  RJMP +1
+.OBJ 6420
+.OBJ 7B3F
+.OBJ 9510
+  RJMP +1
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp usb_isr_getbit7
+Usb_isr_unstuff7:
+.OBJ 6820
+.OBJ 773F
+.OBJ 9500
+  RJMP +1
+  RJMP +1
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+  rjmp usb_isr_getbit0
+Usb_isr_overflow:
+Usb_isr_return:
+.OBJ 910F
+.OBJ 911F
+.OBJ 912F
+usb_isr_return_pre_push:
+  *in stuffmask, _usb_IFR
+  *sbrc stuffmask, _usb_INTF
+  rjmp usb_isr_get_j
+.OBJ 913F
+  Out Sreg , stuffmask
+.OBJ 913F
+.OBJ 914F
+.OBJ 91BF
+.OBJ 91AF
+.OBJ 9518
+Usb_isr_SE0_handler:
+  *ldi stuffmask, (2^_usb_INTF)
+  *OUT _usb_IFR, stuffmask
+.OBJ 1BA4
+.OBJ 40B0
+.OBJ 910D
+.OBJ 2F10
+.OBJ 7313
+.OBJ 3211
+  brne USB_ISR_NOTTOKEN
+.OBJ 911D
+.OBJ 912D
+  * lds devid, {_usb_DeviceID}
+.OBJ F11
+.OBJ 1F22
+.OBJ 9516
+.OBJ 702F
+.OBJ 1714
+  brne usb_isr_ignore
+.OBJ 3609
+  breq usb_isr_in
+.OBJ 3E01
+  breq Usb_isr_out
+*  lds status, {_usb_STATUS}
+*  sbrs status, _usb_RTR
+  rjmp usb_isr_ignore
+.OBJ 320D
+  breq usb_isr_setup
+  rjmp usb_isr_ignore
+usb_isr_in:
+* sts {_usb_STATUS2}, endp
+  breq usb_isr_find_tx_buffer
+USB_ISR_NOTTOKEN:
+  * lds endp, {_usb_STATUS2}
+  * sbrc endp, _usb_IGNORE
+  rjmp usb_isr_return
+  * lds status, {_usb_STATUS}
+.OBJ 7C30
+.OBJ 2B32
+.OBJ 702F
+usb_isr_find_tx_buffer:
+  * ldi XL , lbyte({_usb_tx_status})
+  * ldi XH , hbyte({_usb_tx_status})
+.OBJ 3020
+  breq usb_isr_load_tx_status
+#if varexist("_usb_Endp2Addr")
+  * ldi XL , lbyte({_usb_tx_status2})
+  * ldi XH , hbyte({_usb_tx_status2})
+*  cpi endp, _usb_Endp2Addr
+  breq usb_isr_load_tx_status
+#endif
+#if varexist("_usb_Endp3Addr")
+  * ldi XL , lbyte({_usb_tx_status3})
+  * ldi XH , hbyte({_usb_tx_status3})
+*  cpi endp, _usb_Endp3Addr
+  breq usb_isr_load_tx_status
+#endif
+  rjmp usb_isr_ignore
+Usb_isr_load_tx_status:
+.OBJ 911D
+.OBJ 3609
+  breq USB_ISR_SEND_DATA
+.OBJ 3C03
+  breq  Usb_isr_got_datax
+.OBJ 340B
+  breq  Usb_isr_got_datax
+#if _usb_Assume_Ack = 0
+.OBJ 3D02
+  breq  USB_ISR_SEND_COMPLETE
+#endif
+  rjmp usb_isr_return
+Usb_isr_Ignore:
+*  sbr endp, 2^_usb_Ignore
+Usb_isr_setup:
+*  sbr endp, 2^_usb_Setup
+Usb_isr_out:
+  * sts {_usb_STATUS2}, endp
+  rjmp usb_isr_return
+#if _usb_Assume_Ack = 0
+USB_ISR_SEND_COMPLETE:
+   * cbr token, 2^_usb_RTT
+   * sbr token, 2^_usb_TXC
+   * ldi status, 2^_usb_TxSync
+.OBJ 2713
+.OBJ 931E
+   rjmp usb_isr_return
+#endif
+Usb_isr_send_data:
+   *  sbrS token, _usb_RTT
+   rjmp usb_isr_send_nak
+.OBJ 2F41
+.OBJ 704F
+   rjmp usb_isr_prepare_send
+Usb_isr_got_datax:
+*  sbrc status, _usb_RTR
+   rjmp usb_isr_send_ack
+Usb_isr_send_nak:
+.OBJ E51A
+   rjmp Usb_isr_prepare_acknak
+Usb_isr_send_ack:
+.OBJ 3043
+   breq usb_isr_do_ack
+   * sbrs status, _usb_RTR
+   rjmp usb_isr_send_nak
+   * sbr status, 2^_usb_RXC
+   * cbr status, 2^_usb_RTR
+   * sts {_usb_STATUS} , status
+   * STS {_usb_rx_count}, count
+Usb_isr_do_ack:
+.OBJ ED12
+Usb_isr_prepare_acknak:
+.OBJ 27BB
+.OBJ E1A1
+.OBJ E041
+   rjmp Usb_isr_prepare_send
+usb_isr_sendbit5:
+   * OUT  _usb_port, portout
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brcc usb_isr_toggle6
+.OBJ 953A
+   brne usb_isr_do6
+.OBJ F22
+   rjmp usb_isr_sendbit5
+usb_isr_toggle6:
+.OBJ 2750
+.OBJ E036
+usb_isr_do6:
+   rjmp usb_isr_sendbit6
+usb_isr_sendbit6:
+   * OUT  _usb_port, portout
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brcc usb_isr_toggle7
+.OBJ 953A
+   brne usb_isr_do7
+.OBJ F22
+   rjmp usb_isr_sendbit6
+Usb_isr_prepare_send:
+.OBJ 935F
+.OBJ 934F
+   * ldi pinmask_reg, pinmask
+   * SBI _usb_port , _usb_dminus
+   * in txByte , _usb_ddr
+   * sbr txByte, pinmask
+   * OUT _usb_ddr , txByte
+   * in portout, _usb_port
+.OBJ E420
+usb_isr_toggle0:
+.OBJ 2750
+.OBJ E036
+usb_isr_do0:
+.OBJ 0
+usb_isr_sendbit0:
+   * OUT  _usb_port, portout
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brcc usb_isr_toggle1
+.OBJ 953A
+   brne usb_isr_do1
+.OBJ F22
+   rjmp usb_isr_sendbit0
+usb_isr_toggle7:
+.OBJ 2750
+.OBJ E036
+usb_isr_do7:
+.OBJ 912D
+   * OUT  _usb_port, portout
+usb_isr_sendbit7:
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brts usb_isr_send_SE0
+   brcc usb_isr_toggle0
+.OBJ 953A
+   brne usb_isr_do0
+.OBJ F22
+   rjmp usb_isr_sendbit7
+usb_isr_toggle1:
+.OBJ 2750
+.OBJ E036
+usb_isr_do1:
+   rjmp usb_isr_sendbit1
+usb_isr_sendbit1:
+   * OUT  _usb_port, portout
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brcc usb_isr_toggle2
+.OBJ 953A
+   brne usb_isr_do2
+.OBJ F22
+   rjmp usb_isr_sendbit1
+usb_isr_toggle2:
+.OBJ 2750
+.OBJ E036
+usb_isr_do2:
+   rjmp usb_isr_sendbit2
+usb_isr_sendbit2:
+   * OUT  _usb_port, portout
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brcc usb_isr_toggle3
+.OBJ 953A
+   brne usb_isr_do3
+.OBJ F22
+   rjmp usb_isr_sendbit2
+usb_isr_toggle3:
+.OBJ 2750
+.OBJ E036
+usb_isr_do3:
+   rjmp usb_isr_sendbit3
+usb_isr_sendbit3:
+   * OUT  _usb_port, portout
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brcc usb_isr_toggle4
+.OBJ 953A
+   brne usb_isr_do4
+.OBJ F22
+   rjmp usb_isr_sendbit3
+usb_isr_toggle4:
+.OBJ 2750
+.OBJ E036
+usb_isr_do4:
+.OBJ 954A
+.OBJ FB47
+usb_isr_sendbit4:
+   * OUT _usb_port, portout
+#if _XTAL = 15000000
+  rjmp +1
+#endif
+.OBJ 9527
+   brcc usb_isr_toggle5
+.OBJ 953A
+   brne usb_isr_do5
+.OBJ F22
+   rjmp usb_isr_sendbit4
+usb_isr_toggle5:
+.OBJ 2750
+.OBJ E036
+usb_isr_do5:
+   rjmp usb_isr_sendbit5
+usb_isr_send_SE0:
+   RJMP +1
+   * in txByte, _usb_port
+   * cbr txByte, pinmask
+   * OUT _usb_port, txByte
+#if _XTAL = 15000000
+  rjmp +1
+  rjmp +1
+#endif
+.OBJ 914F
+.OBJ 1BA4
+.OBJ 40B0
+.OBJ 2F42
+   * ORi txByte, Jstate
+   * in stuffmask, _usb_ddr
+   * cbr stuffmask, pinmask
+   *ldi pinmask_reg, (2^_usb_INTF)
+   *OUT _usb_IFR, pinmask_reg
+.OBJ 915F
+.OBJ 910E
+.OBJ 7403
+   * OUT _usb_port, txByte
+   * OUT _usb_ddr, stuffmask
+   * OUT _usb_port, count
+#if _usb_Assume_Ack = 1
+   breq usb_isr_not_data
+.OBJ 911E
+   *cbr token, 2^_usb_RTT
+   *sbr token, 2^_usb_TXC
+   *ldi status, 2^_usb_TxSync
+.OBJ 2713
+.OBJ 931C
+   usb_isr_not_data:
+#endif
+   rjmp Usb_isr_return
+[end]
+[crcusb]
+Crcusb:
+.def _crc_CRCL = r16
+.def _crc_CRCH = r17
+.def _crc_MB = r18
+.def _crc_tmp = r19
+.def _crc_count = r20
+.def _crc_index = r24
+.OBJ 93AF
+.OBJ 93BF
+.OBJ 930F
+.OBJ 931F
+.OBJ 932F
+.OBJ 933F
+.OBJ 934F
+.OBJ 938F
+.OBJ 81A8
+.OBJ 81B9
+.OBJ 914C
+.OBJ 81AA
+.OBJ 81BB
+.OBJ EF0F
+.OBJ EF1F
+_crcusb_loop:
+.OBJ 954A
+  brmi _crcusb_exit
+.OBJ 912D
+.OBJ 2720
+.OBJ 2F82
+.OBJ 2F01
+.OBJ 2733
+.OBJ 9488
+.OBJ 9527
+.OBJ 2782
+.OBJ 9537
+.OBJ 2F28
+.OBJ 9527
+.OBJ 2F12
+.OBJ 9537
+.OBJ 1F88
+.OBJ 2782
+.OBJ 2F28
+.OBJ 9522
+.OBJ 2782
+.OBJ 2F23
+.OBJ E031
+.OBJ FD81
+.OBJ 2723
+.OBJ 2702
+.OBJ EC20
+.OBJ FD81
+.OBJ 2712
+  rjmp _crcusb_loop
+_crcusb_exit:
+.OBJ 9510
+.OBJ 9500
+.OBJ 81AC
+.OBJ 81BD
+.OBJ 930D
+.OBJ 931C
+.OBJ 918F
+.OBJ 914F
+.OBJ 913F
+.OBJ 912F
+.OBJ 911F
+.OBJ 910F
+.OBJ 91BF
+.OBJ 91AF
+.OBJ 9508
+[END]

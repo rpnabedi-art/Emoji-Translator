@@ -1,0 +1,69 @@
+'-----------------------------------------------------------------------------------------
+'name                     : tcpip.bas
+'copyright                : (c) 1995-2012, MCS Electronics
+'purpose                  : demo: CONFIG TCPIP
+'micro                    : Mega162
+'suited for demo          : yes
+'commercial addon needed  : only hardware
+'-----------------------------------------------------------------------------------------
+
+$regfile = "M162def.dat"
+$crystal = 8000000
+$baud = 19200
+$hwstack = 40
+$swstack = 40
+$framesize = 40
+
+
+
+Const Epr = 1                                               ' optional eeprom storage
+
+
+Print "Init , set IP to 192.168.0.8"                        ' display a message
+Enable Interrupts                                           ' before we use config tcpip , we need to enable the interrupts
+Config Tcpip = Int0 , Mac = 12.128.12.34.56.78 , Ip = 192.168.0.8 , Submask = 255.255.255.0 , Gateway = 0.0.0.0 , Localport = 1000 , Tx = $55 , Rx = $55
+Print "Init Done"
+
+'Use the line below if you have a gate way
+'Config Tcpip = Int0 , Mac = 12.128.12.34.56.78 , Ip = 192.168.0.8 , Submask = 255.255.255.0 , Gateway = 192.168.0.1 , Localport = 1000 , Tx = $55 , Rx = $55
+
+
+'The next code is optional. It shows how to change the IP at run time
+#if Epr = 1
+    Dim Xx As Eram Long                                     ' this is 4 bytes of EEPROM
+    Dim Zz As Long                                          ' this is a long
+    Zz = Xx                                                 ' read eeprom
+    Dim B4 As Byte
+    B4 = 8
+
+    'use maketcp to create an IP number
+    'notice that last param is a variable.
+    'all bytes could be variables of course
+    Zz = Maketcp(192 , 168 , 0 , B4)
+
+    'in reverse order
+    Zz = Maketcp(b4 , 9 , 168 , 192 , 1)
+
+    'simplest form
+    Zz = Maketcp(192.168.0.6)
+
+    Print Ip2str(zz)
+    Settcp 12.128.12.34.56.78 , Zz , 255.255.255.0 , 0.0.0.0
+    '                            ^   notice the variable that holds the IP address 192.168.0.8
+    '                                from the EEPROM data line below
+#endif
+
+Do
+  nop
+  ' a ping should now work
+Loop
+End
+
+
+End
+
+
+$eeprom
+' take care, data is stored byte, by byte so reversed notation is used
+Data 8 , 0 , 168 , 192                                      '   this is 192 , 168 , 0 , 8
+$data

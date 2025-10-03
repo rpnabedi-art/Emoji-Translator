@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>MCS Post test</title>
+</head>
+<body>
+<form method="POST" >
+  <p><input type="checkbox" name="C1" value="ON">Check it</p>
+  <p><input type="submit" value="Submit" name="B1"><input type="reset" value="Reset" name="B2"></p>
+</form>
+</body>
+</html>
+<html>
+<head>
+<title>Easy TCP/IP</title>
+</head>
+<body>
+<p><b>P</b>age <b>n</b>ot <b>f</b>ound</p>
+</body>
+</html>
