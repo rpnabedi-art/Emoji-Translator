@@ -2,13 +2,13 @@ import tkinter as tk
 import json
 import os
 
-# تنظیمات اولیه
+
 coins = 0
 click_power = 1
 auto_click_level = 0
 
 def update_labels():
-    coin_label.config(text=f"🪙 سکه: {coins}")
+    coin_label.config(text=f"🪙 coin: {coins}")
     click_upgrade_btn.config(text=f"افزایش قدرت کلیک (+{click_power}) - قیمت: {click_power * 10}")
     auto_click_btn.config(text=f"کلیک خودکار سطح {auto_click_level} - قیمت: {(auto_click_level + 1) * 50}")
 
@@ -58,15 +58,15 @@ def load_game():
             auto_click_level = state.get("auto_click_level", 0)
             update_labels()
 
-# ساخت پنجره
+
 root = tk.Tk()
-root.title("🎮 بازی کلیکر پیشرفته")
+root.title("🎮profesional clicker game")
 root.geometry("400x400")
 
-coin_label = tk.Label(root, text="🪙 سکه: 0", font=("Arial", 16))
+coin_label = tk.Label(root, text="🪙 coin: 0", font=("Arial", 16))
 coin_label.pack(pady=10)
 
-click_button = tk.Button(root, text="کلیک کن!", font=("Arial", 20), width=20, command=click)
+click_button = tk.Button(root, text="click here!", font=("Arial", 20), width=20, command=click)
 click_button.pack(pady=20)
 
 click_upgrade_btn = tk.Button(root, text="", command=upgrade_click)
@@ -75,11 +75,11 @@ click_upgrade_btn.pack(pady=10)
 auto_click_btn = tk.Button(root, text="", command=upgrade_auto_click)
 auto_click_btn.pack(pady=10)
 
-# دکمه ذخیره و بارگذاری
-tk.Button(root, text="ذخیره بازی", command=save_game).pack(side="left", padx=20, pady=20)
-tk.Button(root, text="بارگذاری بازی", command=load_game).pack(side="right", padx=20, pady=20)
 
-# راه‌اندازی
+tk.Button(root, text="save game", command=save_game).pack(side="left", padx=20, pady=20)
+tk.Button(root, text="load game", command=load_game).pack(side="right", padx=20, pady=20)
+
+
 load_game()
 update_labels()
 auto_click_loop()
