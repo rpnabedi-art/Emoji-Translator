@@ -3,7 +3,6 @@ import json
 import os
 import time
 
-# متغیرهای بازی
 coins = 10000000000
 click_power = 10000000
 auto_click_level = 100000
@@ -12,7 +11,6 @@ start_time = time.time()
 
 SAVE_FILE = "clicker_save.json"
 
-# رنگ‌ها و فونت‌ها
 BG_COLOR = "#282c34"
 FG_COLOR = "#abb2bf"
 BTN_COLOR = "#61afef"
@@ -93,14 +91,13 @@ def on_closing():
     save_game()
     root.destroy()
 
-# دکمه‌ها رنگ هنگام ورود موس تغییر کنه
 def on_enter(e):
     e.widget['background'] = BTN_HOVER_COLOR
 
 def on_leave(e):
     e.widget['background'] = BTN_COLOR
 
-# UI
+#UI design
 root = tk.Tk()
 root.title("🎮 بازی کلیکر پیشرفته")
 root.geometry("420x480")
@@ -150,7 +147,7 @@ reset_btn.grid(row=0, column=2, padx=10)
 reset_btn.bind("<Enter>", on_enter)
 reset_btn.bind("<Leave>", on_leave)
 
-# راه‌اندازی
+
 load_game()
 update_labels()
 auto_click_loop()
